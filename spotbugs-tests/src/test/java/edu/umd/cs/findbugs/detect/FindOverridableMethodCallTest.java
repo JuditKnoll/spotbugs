@@ -3,6 +3,9 @@ package edu.umd.cs.findbugs.detect;
 import static edu.umd.cs.findbugs.test.CountMatcher.containsExactly;
 import static org.hamcrest.Matchers.hasItem;
 
+import edu.umd.cs.findbugs.BugCollection;
+import edu.umd.cs.findbugs.test.SpotBugsExtension;
+import edu.umd.cs.findbugs.test.SpotBugsRunner;
 import org.apache.bcel.Const;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -13,8 +16,41 @@ import edu.umd.cs.findbugs.AbstractIntegrationTest;
 import edu.umd.cs.findbugs.annotations.Confidence;
 import edu.umd.cs.findbugs.test.matcher.BugInstanceMatcher;
 import edu.umd.cs.findbugs.test.matcher.BugInstanceMatcherBuilder;
+import org.junit.jupiter.api.condition.DisabledOnJre;
+import org.junit.jupiter.api.condition.JRE;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.nio.file.Paths;
+
+@ExtendWith(SpotBugsExtension.class)
 class FindOverridableMethodCallTest extends AbstractIntegrationTest {
+    @Test
+    @DisabledOnJre({ JRE.JAVA_8 })
+    void testIssue2414_java11(SpotBugsRunner spotbugs) {
+        BugCollection bugCollection = spotbugs.performAnalysis(Paths.get(
+                "../spotbugsTestCases/build/classes/java/java17/overridableMethodCall/Issue2414.class"));
+
+        final BugInstanceMatcher bugInstanceMatcher = new BugInstanceMatcherBuilder()
+                .bugType("MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR")
+                //                .inClass("Issue2414")
+                //                .inMethod(Const.CONSTRUCTOR_NAME)
+                //                .withConfidence(Confidence.LOW)
+                //                .atLine(line)
+                .build();
+
+        assertThat(bugCollection, containsExactly(1, bugInstanceMatcher));
+    }
+
+    @Test
+    void testIssue2414_java8() {
+        performAnalysis("overridableMethodCall/Issue2414.class");
+
+        final BugInstanceMatcher bugInstanceMatcher = new BugInstanceMatcherBuilder()
+                .bugType("MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR")
+                .build();
+
+        assertThat(getBugCollection(), containsExactly(0, bugInstanceMatcher));
+    }
 
     @Test
     void testDirectCase() {
