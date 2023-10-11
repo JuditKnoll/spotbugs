@@ -6,8 +6,24 @@ import org.apache.bcel.Const;
 import org.junit.jupiter.api.Test;
 
 import edu.umd.cs.findbugs.AbstractIntegrationTest;
+import org.junit.jupiter.api.condition.DisabledOnJre;
+import org.junit.jupiter.api.condition.JRE;
 
 class FindOverridableMethodCallTest extends AbstractIntegrationTest {
+    @Test
+    @DisabledOnJre({ JRE.JAVA_8 })
+    void testIssue2414_java11() {
+        performAnalysis("../java17/overridableMethodCall/Issue2414.class");
+
+        checkNoBug();
+        // there is an `MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR` FP at line 10
+    }
+
+    @Test
+    void testIssue2414_java8() {
+        performAnalysis("overridableMethodCall/Issue2414.class");
+        checkNoBug();
+    }
 
     @Test
     void testDirectCase() {
