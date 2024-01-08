@@ -33,7 +33,7 @@ jobs:
           echo "github.ref=${{github.ref}}"
           echo "github.head_ref=${{github.head_ref}}"
       - name: Echo on tag if condition
-        if: (github.ref_type == 'tag') && (github.event.base_ref == "refs/heads/master")
+        if: (github.ref_type == 'tag') && (github.event.base_ref == 'refs/heads/master')
         run: |
           echo "github.event.base_ref=${{ github.event.base_ref }}"
           echo "github.base_ref=${{github.base_ref}}"
