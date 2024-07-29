@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.HashMap;
 
+import edu.umd.cs.findbugs.classfile.MethodDescriptor;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.JavaClass;
@@ -42,12 +43,11 @@ import edu.umd.cs.findbugs.ba.type.TypeFrameModelingVisitor;
 import edu.umd.cs.findbugs.classfile.CheckedAnalysisException;
 import edu.umd.cs.findbugs.classfile.ClassDescriptor;
 import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
-import edu.umd.cs.findbugs.classfile.MethodDescriptor;
 import edu.umd.cs.findbugs.util.MutableClasses;
 
 public class FindReturnRef extends OpcodeStackDetector {
     private boolean check = false;
-    private boolean isRecord = false;
+    private boolean isNestedWithAccessMethod = false;
 
     private boolean staticMethod = false;
 
@@ -69,7 +69,7 @@ public class FindReturnRef extends OpcodeStackDetector {
     private final Map<OpcodeStack.Item, XField> arrayFieldClones = new HashMap<>();
     private final Map<OpcodeStack.Item, OpcodeStack.Item> arrayParamClones = new HashMap<>();
 
-    private final Map<String, XField> accessMethodFields = new HashMap<>();
+    private final Map<XMethod, XField> accessMethodFields = new HashMap<>();
 
     private final BugAccumulator bugAccumulator;
 
@@ -95,9 +95,9 @@ public class FindReturnRef extends OpcodeStackDetector {
 
     @Override
     public void visit(Method obj) {
-        isRecord = getThisClass().isPublic() && ACCESS_METHOD_MATCHER.reset(obj.getName()).matches();
+        isNestedWithAccessMethod = getThisClass().isPublic() && ACCESS_METHOD_MATCHER.reset(obj.getName()).matches();
         check = getThisClass().isPublic() && obj.isPublic();
-        if (!check && !isRecord) {
+        if (!check && !isNestedWithAccessMethod) {
             return;
         }
         staticMethod = obj.isStatic();
@@ -112,7 +112,7 @@ public class FindReturnRef extends OpcodeStackDetector {
 
     @Override
     public void visit(Code obj) {
-        if (check || isRecord) {
+        if (check || isNestedWithAccessMethod) {
             super.visit(obj);
         }
     }
@@ -120,24 +120,18 @@ public class FindReturnRef extends OpcodeStackDetector {
     @Override
     public void sawOpcode(int seen) {
         if (!check) {
-            if (isRecord) {
+            if (isNestedWithAccessMethod) {
                 if ((seen == Const.PUTSTATIC || seen == Const.PUTFIELD) && nonPublicFieldOperand()
                         && MutableClasses.mutableSignature(getSigConstantOperand())) {
-                    XField field = getXFieldOperand();
-                    accessMethodFields.put(getClassName() + "." + getMethodName(), field);
+                    accessMethodFields.put(getXMethod(), getXFieldOperand());
                 }
 
                 if (seen == Const.ARETURN) {
-                    OpcodeStack.Item item = stack.getStackItem(0);
-                    XField field = item.getXField();
-                    if (field == null
-                            || field.isPublic()
-                            || AnalysisContext.currentXFactory().isEmptyArrayField(field)
-                            || field.getName().contains("EMPTY")
-                            || !MutableClasses.mutableSignature(field.getSignature())) {
+                    XField field = stack.getStackItem(0).getXField();
+                    if (isPublicOrEmptyArrayOrImmutable(field)) {
                         return;
                     }
-                    accessMethodFields.put(getClassName() + "." + getMethodName(), field);
+                    accessMethodFields.put(getXMethod(), field);
                 }
             } else {
                 return;
@@ -164,8 +158,8 @@ public class FindReturnRef extends OpcodeStackDetector {
                                 .addClassAndMethod(this)
                                 .addReferencedField(this)
                                 .add(LocalVariableAnnotation.getLocalVariableAnnotation(getMethod(),
-                                        top.getRegisterNumber(),
-                                        getPC(), getPC() - 1)), this);
+                                        top.getRegisterNumber(), getPC(), getPC() - 1)),
+                        this);
             }
         }
         if (!staticMethod && seen == Const.PUTFIELD && nonPublicFieldOperand()
@@ -180,8 +174,8 @@ public class FindReturnRef extends OpcodeStackDetector {
                                 .addClassAndMethod(this)
                                 .addReferencedField(this)
                                 .add(LocalVariableAnnotation.getLocalVariableAnnotation(getMethod(),
-                                        top.getRegisterNumber(),
-                                        getPC(), getPC() - 1)), this);
+                                        top.getRegisterNumber(), getPC(), getPC() - 1)),
+                        this);
             }
         }
 
@@ -208,12 +202,7 @@ public class FindReturnRef extends OpcodeStackDetector {
                     isBuf = true;
                 }
             }
-            if (field == null
-                    || !isFieldOf(field, getClassDescriptor())
-                    || field.isPublic()
-                    || AnalysisContext.currentXFactory().isEmptyArrayField(field)
-                    || field.getName().contains("EMPTY")
-                    || !MutableClasses.mutableSignature(TypeFrameModelingVisitor.getType(field).getSignature())) {
+            if (isPublicOrEmptyArrayOrImmutable(field) || !isFieldOf(field, getClassDescriptor())) {
                 return;
             }
             bugAccumulator.accumulateBug(
@@ -272,19 +261,11 @@ public class FindReturnRef extends OpcodeStackDetector {
             }
 
             if (ACCESS_METHOD_MATCHER.reset(method.getName()).matches()) {
-                if (method.getNumParams() == 0) {
+                if (method.getNumParams() == 0 || (method.getNumParams() == 1 && isMethodParamTheClass(method))) {
                     return;
                 }
 
-                if (method.getNumParams() == 1) {
-                    String signature = method.getSignature();
-                    if (method.getClassDescriptor().getSignature().equals(signature.substring(signature.indexOf('(') + 1,
-                            signature.indexOf(')')))) {
-                        return;
-                    }
-                }
-
-                XField field = accessMethodFields.get(method.getClassName() + "." + method.getName());
+                XField field = accessMethodFields.get(method);
                 if (field == null || field.isPublic()) {
                     return;
                 }
@@ -298,8 +279,8 @@ public class FindReturnRef extends OpcodeStackDetector {
                                     .addClassAndMethod(this)
                                     .addReferencedField(this)
                                     .add(LocalVariableAnnotation.getLocalVariableAnnotation(getMethod(),
-                                            top.getRegisterNumber(),
-                                            getPC(), getPC() - 1)), this);
+                                            top.getRegisterNumber(), getPC(), getPC() - 1)),
+                            this);
                 }
             }
         }
@@ -349,20 +330,14 @@ public class FindReturnRef extends OpcodeStackDetector {
             XMethod method = getXMethodOperand();
 
             if (method != null && ACCESS_METHOD_MATCHER.reset(method.getName()).matches()) {
-                XField field = accessMethodFields.get(method.getClassName() + "." + method.getName());
+                XField field = accessMethodFields.get(method);
                 if (field == null) {
                     return;
                 }
 
-                if (method.getNumParams() == 0) {
-                    stack.replaceTop(new OpcodeStack.Item(field.getSignature(), new FieldAnnotation(field.getClassName(), field.getName(),
-                            field.getSignature(), field.isStatic())));
-                } else if (method.getNumParams() == 1) {
-                    String signature = method.getSignature();
-                    if (method.getClassDescriptor().getSignature().equals(signature.substring(signature.indexOf('(') + 1, signature.indexOf(')')))) {
-                        stack.replaceTop(new OpcodeStack.Item(field.getSignature(), new FieldAnnotation(field.getClassName(), field.getName(),
-                                field.getSignature(), field.isStatic())));
-                    }
+                if (method.getNumParams() == 0 || (method.getNumParams() == 1 && isMethodParamTheClass(method))) {
+                    stack.replaceTop(new OpcodeStack.Item(field.getSignature(),
+                            new FieldAnnotation(field.getClassName(), field.getName(), field.getSignature(), field.isStatic())));
                 }
             }
 
@@ -378,6 +353,19 @@ public class FindReturnRef extends OpcodeStackDetector {
                 arrayParamClones.put(item, paramCloneUnderCast);
             }
         }
+    }
+
+    private static boolean isMethodParamTheClass(XMethod m) {
+        String signature = m.getSignature();
+        return m.getClassDescriptor().getSignature().equals(signature.substring(signature.indexOf('(') + 1, signature.indexOf(')')));
+    }
+
+    private static boolean isPublicOrEmptyArrayOrImmutable(XField field) {
+        return field == null
+                || field.isPublic()
+                || AnalysisContext.currentXFactory().isEmptyArrayField(field)
+                || field.getName().contains("EMPTY")
+                || !MutableClasses.mutableSignature(TypeFrameModelingVisitor.getType(field).getSignature());
     }
 
     private boolean nonPublicFieldOperand() {
