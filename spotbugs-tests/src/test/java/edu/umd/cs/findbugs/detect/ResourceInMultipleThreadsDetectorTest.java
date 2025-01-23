@@ -66,6 +66,26 @@ class ResourceInMultipleThreadsDetectorTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void testUnsafeFieldUsages5() {
+        performAnalysis("commonResources/UnsafeFieldUsage5.class",
+                "commonResources/UnsafeFieldUsage5$1.class",
+                "commonResources/Vehicle.class",
+                "commonResources/Vehicle$Builder.class");
+        assertBugTypeCount("AT_UNSAFE_RESOURCE_ACCESS_IN_THREAD", 2);
+        // TODO check exact bugs
+    }
+
+    @Test
+    void testUnsafeFieldUsages6() {
+        performAnalysis("commonResources/UnsafeFieldUsage6.class",
+                "commonResources/UnsafeFieldUsage6$1.class",
+                "commonResources/Vehicle.class",
+                "commonResources/Vehicle$Builder.class");
+        assertBugTypeCount("AT_UNSAFE_RESOURCE_ACCESS_IN_THREAD", 3);
+        // TODO check exact bugs
+    }
+
+    @Test
     void testSynchronizedUnsafeFieldUsage() {
         performAnalysis("commonResources/SynchronizedUnsafeFieldUsage.class",
                 "commonResources/Vehicle.class",
