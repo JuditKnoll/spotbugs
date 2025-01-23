@@ -156,6 +156,20 @@ public class NestedAccessUtil {
         return null;
     }
 
+    public static List<JavaClass> getNestMemberClasses(JavaClass javaClass) throws ClassNotFoundException {
+        List<JavaClass> list = new ArrayList<>();
+        if (javaClass != null) {
+            String[] nestMemberClassNames = getNestMemberClassNames(javaClass);
+            if (nestMemberClassNames != null) {
+                for (String nestMember : nestMemberClassNames) {
+                    JavaClass nestMemberClass = Repository.lookupClass(nestMember);
+                    list.add(nestMemberClass);
+                }
+            }
+        }
+        return list;
+    }
+
     @CheckForNull
     private static String getHostDottedClassName(JavaClass javaClass) {
         String hostClassName = getHostClassName(javaClass);
