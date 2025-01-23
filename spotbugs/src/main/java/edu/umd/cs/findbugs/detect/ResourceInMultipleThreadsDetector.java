@@ -18,6 +18,7 @@
 
 package edu.umd.cs.findbugs.detect;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,8 +28,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import edu.umd.cs.findbugs.ba.AnalysisContext;
+import edu.umd.cs.findbugs.ba.CFG;
+import edu.umd.cs.findbugs.ba.CFGBuilderException;
+import edu.umd.cs.findbugs.ba.ClassContext;
+import edu.umd.cs.findbugs.ba.Location;
 import edu.umd.cs.findbugs.ba.XFactory;
+import edu.umd.cs.findbugs.ba.Hierarchy;
+import edu.umd.cs.findbugs.ba.JavaClassAndMethod;
 import org.apache.bcel.Const;
+import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.BootstrapMethods;
 import org.apache.bcel.classfile.ConstantInvokeDynamic;
@@ -45,6 +54,11 @@ import edu.umd.cs.findbugs.util.BootstrapMethodsUtil;
 import edu.umd.cs.findbugs.util.CollectionAnalysis;
 import edu.umd.cs.findbugs.util.MethodAnalysis;
 import edu.umd.cs.findbugs.util.MutableClasses;
+import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.INVOKEDYNAMIC;
+import org.apache.bcel.generic.Instruction;
+import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InvokeInstruction;
 
 public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
 
@@ -70,13 +84,45 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
         this.bugReporter = bugReporter;
     }
 
-    @Override
-    public void visit(JavaClass obj) {
+    public void visit(ClassContext ctx) {
         resetState();
-        for (Method m : obj.getMethods()) {
+        JavaClass javaClass = ctx.getJavaClass();
+        for (Method m : javaClass.getMethods()) {
             doVisitMethod(m);
         }
+
+        for (XMethod xm : methodsUsedInThreads) {
+            // it's a nest member, an anonymous class implementing Runnable
+            if (!xm.getClassName().equals(javaClass.getClassName())) {
+                collectMethods(ctx, javaClass, xm);
+            }
+        }
         firstPass = false;
+    }
+
+    private void collectMethods(ClassContext classContext, JavaClass javaClass, XMethod xMethod) {
+        try {
+            Method method = Arrays.stream(javaClass.getMethods())
+                    .filter(m -> m.getName().equals(xMethod.getName()) && m.getSignature().equals(xMethod.getSignature()))
+                    .findFirst().orElse(null);
+            if (method != null) {
+                CFG cfg = classContext.getCFG(method);
+                ConstantPoolGen cpg = classContext.getConstantPoolGen();
+
+                for (Location location : cfg.orderedLocations()) {
+                    InstructionHandle handle = location.getHandle();
+                    Instruction instruction = handle.getInstruction();
+
+                    if (instruction instanceof InvokeInstruction && !(instruction instanceof INVOKEDYNAMIC)) {
+                        XMethod calledMethod = XFactory.createXMethod((InvokeInstruction) instruction, cpg);
+                        calledMethodsByMethods.computeIfAbsent(getXMethod(), v -> new HashSet<>()).add(calledMethod);
+                        addToMethodsUsedInThreads(calledMethod);
+                    }
+                }
+            }
+        } catch (CFGBuilderException e) {
+            bugReporter.logError("Detector ResourceInMultipleThreadsDetector caught exception while analyzing an anonymous class", e);
+        }
     }
 
     @Override
@@ -121,6 +167,24 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
         } else if ((seen == Const.INVOKEVIRTUAL || seen == Const.INVOKEINTERFACE || seen == Const.INVOKESPECIAL || seen == Const.INVOKESTATIC)) {
             XMethod calledMethod = getXMethodOperand();
             if (calledMethod != null) {
+                if ("java.lang.Thread".equals(calledMethod.getClassName()) && Const.CONSTRUCTOR_NAME.equals(calledMethod.getName())) {
+                    int stackIdx = getStackIndexOfRunnable(calledMethod.getSignature());
+                    if (stackIdx >= 0) {
+                        OpcodeStack.Item stackItem = getStack().getStackItem(stackIdx);
+                        try {
+                            JavaClass runnableClass = stackItem.getJavaClass();
+                            if (runnableClass != null && runnableClass.isAnonymous()) {
+                                // java.lang.Runnable.run() method is the relevant one
+                                JavaClassAndMethod runMethod = Hierarchy.findMethod(runnableClass, "run", "()V");
+                                if (runMethod != null) {
+                                    methodsUsedInThreads.add(runMethod.toXMethod());
+                                }
+                            }
+                        } catch (ClassNotFoundException e) {
+                            bugReporter.logError(String.format("Could not find class during analyzing %s with ResourceInMultipleThreadsDetector", getClassName()), e);
+                        }
+                    }
+                }
                 calledMethodsByMethods.computeIfAbsent(getXMethod(), v -> new HashSet<>()).add(calledMethod);
 
                 if (methodsUsedInThreads.contains(getXMethod())
@@ -135,6 +199,26 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
         methodsUsedInThreads.add(methodToAdd);
         if (calledMethodsByMethods.containsKey(methodToAdd)) {
             methodsUsedInThreads.addAll(calledMethodsByMethods.get(methodToAdd));
+        }
+    }
+
+    /**
+     * Get the stack index of java.lang.Runnable type if the provided signature is a valid signature of java.lang.Thread's constructors.
+     * @param signature the provided method signature
+     * @return the stack index of the java.lang.Runnable type
+     */
+    private static int getStackIndexOfRunnable(String signature) {
+        switch (signature) {
+            case "(Ljava/lang/Runnable;)V":
+            case "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;)V":
+                return 0;
+            case "(Ljava/lang/Runnable;Ljava/lang/String;)V":
+            case "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V":
+                return 1;
+            case "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;J)V":
+                return 2;
+            default:
+                return -1;
         }
     }
 
@@ -176,6 +260,12 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
                     createOrUpdateFieldData(field, true, getMethod(), getXMethodOperand());
                 }
             }
+        } else if ((seen == Const.GETFIELD || seen == Const.GETSTATIC)
+//                && !MethodAnalysis.isDuplicatedLocation(getMethodDescriptor(), getPC())
+//                && methodsUsedInThreads.contains(getMethodDescriptor())
+        ) {
+            OpcodeStack.Item stackItem = getStack().getStackItem(0);
+
         } else if ((seen == Const.INVOKEVIRTUAL || seen == Const.INVOKEINTERFACE || seen == Const.INVOKESPECIAL || seen == Const.INVOKESTATIC)
                 && getXMethodOperand() != null && getStack().getStackDepth() > 0
                 && !MethodAnalysis.isDuplicatedLocation(getMethodDescriptor(), getPC())
