@@ -18,7 +18,6 @@
 
 package edu.umd.cs.findbugs.detect;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -28,16 +27,20 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import edu.umd.cs.findbugs.ba.AnalysisContext;
+import edu.umd.cs.findbugs.Lookup;
 import edu.umd.cs.findbugs.ba.CFG;
 import edu.umd.cs.findbugs.ba.CFGBuilderException;
 import edu.umd.cs.findbugs.ba.ClassContext;
 import edu.umd.cs.findbugs.ba.Location;
+import edu.umd.cs.findbugs.ba.LockDataflow;
+import edu.umd.cs.findbugs.ba.OpcodeStackScanner;
 import edu.umd.cs.findbugs.ba.XFactory;
 import edu.umd.cs.findbugs.ba.Hierarchy;
 import edu.umd.cs.findbugs.ba.JavaClassAndMethod;
+import edu.umd.cs.findbugs.bcel.BCELUtil;
+import edu.umd.cs.findbugs.classfile.MethodDescriptor;
+import edu.umd.cs.findbugs.util.MultiThreadedCodeIdentifierUtils;
 import org.apache.bcel.Const;
-import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.BootstrapMethods;
 import org.apache.bcel.classfile.ConstantInvokeDynamic;
@@ -55,15 +58,17 @@ import edu.umd.cs.findbugs.util.CollectionAnalysis;
 import edu.umd.cs.findbugs.util.MethodAnalysis;
 import edu.umd.cs.findbugs.util.MutableClasses;
 import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.FieldInstruction;
 import org.apache.bcel.generic.INVOKEDYNAMIC;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InvokeInstruction;
+import org.apache.bcel.generic.PUTFIELD;
+import org.apache.bcel.generic.PUTSTATIC;
 
 public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
 
     private static final class FieldData {
-
         private boolean modified = false;
         private boolean onlySynchronized = true;
         private boolean onlyPutField = true;
@@ -76,9 +81,6 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
     private final Map<XMethod, Set<XMethod>> calledMethodsByMethods = new HashMap<>();
     private final Set<XMethod> methodsUsedInThreads = new HashSet<>();
     private final Map<XField, FieldData> fieldsUsedInThreads = new HashMap<>();
-
-    private boolean synchronizedBlock = false;
-    private boolean firstPass = true;
 
     public ResourceInMultipleThreadsDetector(BugReporter bugReporter) {
         this.bugReporter = bugReporter;
@@ -97,14 +99,15 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
                 collectMethods(ctx, javaClass, xm);
             }
         }
-        firstPass = false;
+
+        for (XMethod xm : methodsUsedInThreads) {
+            collectFieldsUsedInThreads(ctx, javaClass, xm);
+        }
     }
 
     private void collectMethods(ClassContext classContext, JavaClass javaClass, XMethod xMethod) {
         try {
-            Method method = Arrays.stream(javaClass.getMethods())
-                    .filter(m -> m.getName().equals(xMethod.getName()) && m.getSignature().equals(xMethod.getSignature()))
-                    .findFirst().orElse(null);
+            Method method = Lookup.findImplementation(javaClass, xMethod.getName(), xMethod.getSignature());
             if (method != null) {
                 CFG cfg = classContext.getCFG(method);
                 ConstantPoolGen cpg = classContext.getConstantPoolGen();
@@ -126,27 +129,8 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
     }
 
     @Override
-    public void visit(Method method) {
-        synchronizedBlock = method.isSynchronized();
-    }
-
-    @Override
     public void sawOpcode(int seen) {
-        if (seen == Const.MONITORENTER) {
-            synchronizedBlock = true;
-        } else if (seen == Const.MONITOREXIT) {
-            synchronizedBlock = false;
-        }
-
-        if (firstPass) {
-            collectMethodsUsedInThreads(seen);
-        } else {
-            try {
-                collectFieldsUsedInThreads(seen);
-            } catch (CheckedAnalysisException e) {
-                bugReporter.logError(String.format("Detector %s caught exception while analyzing class %s", getClass().getName(), getClassName()), e);
-            }
-        }
+        collectMethodsUsedInThreads(seen);
     }
 
     private void collectMethodsUsedInThreads(int seen) {
@@ -181,7 +165,8 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
                                 }
                             }
                         } catch (ClassNotFoundException e) {
-                            bugReporter.logError(String.format("Could not find class during analyzing %s with ResourceInMultipleThreadsDetector", getClassName()), e);
+                            bugReporter.logError(String.format("Could not find class during analyzing %s with ResourceInMultipleThreadsDetector",
+                                    getClassName()), e);
                         }
                     }
                 }
@@ -209,16 +194,16 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
      */
     private static int getStackIndexOfRunnable(String signature) {
         switch (signature) {
-            case "(Ljava/lang/Runnable;)V":
-            case "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;)V":
-                return 0;
-            case "(Ljava/lang/Runnable;Ljava/lang/String;)V":
-            case "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V":
-                return 1;
-            case "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;J)V":
-                return 2;
-            default:
-                return -1;
+        case "(Ljava/lang/Runnable;)V":
+        case "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;)V":
+            return 0;
+        case "(Ljava/lang/Runnable;Ljava/lang/String;)V":
+        case "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V":
+            return 1;
+        case "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;J)V":
+            return 2;
+        default:
+            return -1;
         }
     }
 
@@ -246,6 +231,63 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
         return Optional.empty();
     }
 
+    private void collectFieldsUsedInThreads(ClassContext classContext, JavaClass javaClass, XMethod xMethod) {
+        try {
+            Method method = Lookup.findImplementation(javaClass, xMethod.getName(), xMethod.getSignature());
+            if (method != null) {
+                CFG cfg = classContext.getCFG(method);
+                ConstantPoolGen cpg = classContext.getConstantPoolGen();
+                LockDataflow lockDataflow = classContext.getLockDataflow(method);
+
+                for (Location loc : cfg.orderedLocations()) {
+                    InstructionHandle ih = loc.getHandle();
+                    MethodDescriptor mdesc = BCELUtil.getMethodDescriptor(javaClass, method);
+                    collectFieldsUsedInThreads(ih, javaClass, method, mdesc, cfg, lockDataflow, cpg);
+                }
+            }
+        } catch (CheckedAnalysisException e) {
+            bugReporter.logError(String.format("Detector ResourceInMultipleThreadsDetector caught exception while analyzing class %s", javaClass
+                    .getClassName()), e);
+        }
+    }
+
+    private void collectFieldsUsedInThreads(InstructionHandle ih, JavaClass javaClass, Method method, MethodDescriptor mdesc, CFG cfg,
+            LockDataflow lockDataflow, ConstantPoolGen cpg) throws CheckedAnalysisException {
+        Instruction instruction = ih.getInstruction();
+        int pos = ih.getPosition();
+        OpcodeStack currentStack = OpcodeStackScanner.getStackAt(javaClass, method, pos);
+        if ((instruction instanceof PUTFIELD || instruction instanceof PUTSTATIC) && currentStack.getStackDepth() > 0
+                && !MethodAnalysis.isDuplicatedLocation(mdesc, pos)) {
+            FieldInstruction inf = (FieldInstruction) instruction;
+            XField field = XFactory.createXField(inf, cpg);
+            OpcodeStack.Item stackItem = currentStack.getStackItem(0);
+            if (stackItem.getReturnValueOf() != null && CollectionAnalysis.isSynchronizedCollection(stackItem.getReturnValueOf())) {
+                synchronizedCollectionTypedFields.add(field);
+            } else if (!isAtomicTypedField(field)
+                    && !(Const.CONSTRUCTOR_NAME.equals(method.getName()) || Const.STATIC_INITIALIZER_NAME.equals(method.getName()))) {
+                boolean isLocked = MultiThreadedCodeIdentifierUtils.isLocked(method, cfg, lockDataflow, pos);
+                createOrUpdateFieldData(field, true, method, null, isLocked);
+            }
+            //        } else if ((seen == Const.GETFIELD || seen == Const.GETSTATIC)
+            //                && !MethodAnalysis.isDuplicatedLocation(getMethodDescriptor(), getPC())
+            //                && methodsUsedInThreads.contains(getMethodDescriptor())
+            //        ) {
+            //            OpcodeStack.Item stackItem = getStack().getStackItem(0);
+
+        } else if ((instruction instanceof InvokeInstruction && !(instruction instanceof INVOKEDYNAMIC))
+                && currentStack.getStackDepth() > 0
+                && !MethodAnalysis.isDuplicatedLocation(mdesc, pos)) {
+            InvokeInstruction invIns = (InvokeInstruction) instruction;
+            XMethod calledMethod = XFactory.createXMethod(invIns, cpg);
+            // The field is accessed always be the last item in the stack, because the earlier elements are the arguments
+            XField xField = currentStack.getStackItem(currentStack.getStackDepth() - 1).getXField();
+            if (xField != null && !isAtomicTypedField(xField)) {
+                boolean isLocked = MultiThreadedCodeIdentifierUtils.isLocked(method, cfg, lockDataflow, pos);
+                createOrUpdateFieldData(xField, false, method, calledMethod, isLocked);
+            }
+        }
+    }
+
     private void collectFieldsUsedInThreads(int seen) throws CheckedAnalysisException {
         if ((seen == Const.PUTFIELD || seen == Const.PUTSTATIC) && getStack().getStackDepth() > 0
                 && !MethodAnalysis.isDuplicatedLocation(getMethodDescriptor(), getPC())
@@ -257,12 +299,12 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
                     synchronizedCollectionTypedFields.add(field);
                 } else if (!isAtomicTypedField(field)
                         && !(Const.CONSTRUCTOR_NAME.equals(getMethodName()) || Const.STATIC_INITIALIZER_NAME.equals(getMethodName()))) {
-                    createOrUpdateFieldData(field, true, getMethod(), getXMethodOperand());
+                    createOrUpdateFieldData(field, true, getMethod(), getXMethodOperand(), false);
                 }
             }
         } else if ((seen == Const.GETFIELD || seen == Const.GETSTATIC)
-//                && !MethodAnalysis.isDuplicatedLocation(getMethodDescriptor(), getPC())
-//                && methodsUsedInThreads.contains(getMethodDescriptor())
+        //                && !MethodAnalysis.isDuplicatedLocation(getMethodDescriptor(), getPC())
+        //                && methodsUsedInThreads.contains(getMethodDescriptor())
         ) {
             OpcodeStack.Item stackItem = getStack().getStackItem(0);
 
@@ -273,7 +315,7 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
             // The field is accessed always be the last item in the stack, because the earlier elements are the arguments
             XField xField = getStack().getStackItem(getStack().getStackDepth() - 1).getXField();
             if (xField != null && !isAtomicTypedField(xField)) {
-                createOrUpdateFieldData(xField, false, getMethod(), getXMethodOperand());
+                createOrUpdateFieldData(xField, false, getMethod(), getXMethodOperand(), false);
             }
         }
     }
@@ -282,7 +324,7 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
         return xField.getSignature().contains("java/util/concurrent/atomic") || synchronizedCollectionTypedFields.contains(xField);
     }
 
-    private void createOrUpdateFieldData(XField xField, boolean putfield, Method containerMethod, XMethod xMethod) {
+    private void createOrUpdateFieldData(XField xField, boolean putfield, Method containerMethod, XMethod xMethod, boolean synchronizedBlock) {
         BugInstance bug = new BugInstance(this, "AT_UNSAFE_RESOURCE_ACCESS_IN_THREAD", LOW_PRIORITY)
                 .addClassAndMethod(this)
                 .addSourceLine(this)
@@ -320,7 +362,6 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
     }
 
     private void resetState() {
-        firstPass = true;
         synchronizedCollectionTypedFields.clear();
         methodsUsedInThreads.clear();
         fieldsUsedInThreads.clear();
