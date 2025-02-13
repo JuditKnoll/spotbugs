@@ -86,10 +86,11 @@ public class ResourceInMultipleThreadsDetector extends OpcodeStackDetector {
         this.bugReporter = bugReporter;
     }
 
-    public void visit(ClassContext ctx) {
+    @Override
+    public void visitClassContext(ClassContext ctx) {
         resetState();
         JavaClass javaClass = ctx.getJavaClass();
-        for (Method m : javaClass.getMethods()) {
+        for (Method m : ctx.getMethodsInCallOrder()) {
             doVisitMethod(m);
         }
 
