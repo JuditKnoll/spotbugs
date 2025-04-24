@@ -259,6 +259,32 @@ class FindReturnRefTest extends AbstractIntegrationTest {
 
     @Test
     @DisabledOnJre({ JRE.JAVA_8, JRE.JAVA_11 })
+    void testUnmodifiableClassStatic() {
+        performAnalysis("exposemutable/UnmodifiableClassStatic.class");
+
+        assertBugInMethodAtField("EI_EXPOSE_REP", "UnmodifiableClassStatic", "getListWithTernary2", "listWithTernary2");
+        assertBugInMethodAtField("EI_EXPOSE_REP", "UnmodifiableClassStatic", "getSetWithTernary2", "setWithTernary2");
+        assertBugInMethodAtField("EI_EXPOSE_REP", "UnmodifiableClassStatic", "getMapWithTernary2", "mapWithTernary2");
+
+        assertBugInMethodAtField("EI_EXPOSE_REP", "UnmodifiableClassStatic", "getListWithIf2", "listWithIf2");
+        assertBugInMethodAtField("EI_EXPOSE_REP", "UnmodifiableClassStatic", "getSetWithIf2", "setWithIf2");
+        assertBugInMethodAtField("EI_EXPOSE_REP", "UnmodifiableClassStatic", "getMapWithIf2", "mapWithIf2");
+        assertBugInMethodAtField("EI_EXPOSE_REP", "UnmodifiableClassStatic", "getListWithIf3", "listWithIf3");
+        assertBugInMethodAtField("EI_EXPOSE_REP", "UnmodifiableClassStatic", "getSetWithIf3", "setWithIf3");
+        assertBugInMethodAtField("EI_EXPOSE_REP", "UnmodifiableClassStatic", "getMapWithIf3", "mapWithIf3");
+
+        assertBugTypeCount("EI_EXPOSE_REP", 9);
+        assertBugTypeCount("EI_EXPOSE_BUF", 0);
+        assertBugTypeCount("EI_EXPOSE_BUF2", 0);
+        assertBugTypeCount("EI_EXPOSE_REP2", 0);
+        assertBugTypeCount("EI_EXPOSE_STATIC_BUF2", 0);
+        assertBugTypeCount("EI_EXPOSE_STATIC_REP2", 0);
+        assertBugTypeCount("MS_EXPOSE_BUF", 0);
+        assertBugTypeCount("MS_EXPOSE_REP", 0);
+    }
+
+    @Test
+    @DisabledOnJre({ JRE.JAVA_8, JRE.JAVA_11 })
     void testUnmodifiableClass() {
         performAnalysis("../java17/exposemutable/UnmodifiableClass.class");
 
