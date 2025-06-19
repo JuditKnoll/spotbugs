@@ -287,6 +287,32 @@ class MultipleInstantiationsOfSingletonsTest extends AbstractIntegrationTest {
         assertNoBugs();
     }
 
+    @Test
+    void Issue3457FN() {
+        performAnalysis("singletons/Issue3457FN.class");
+        assertBugTypeCount("SING_SINGLETON_GETTER_NOT_SYNCHRONIZED", 1);
+        assertBugInClass("SING_SINGLETON_GETTER_NOT_SYNCHRONIZED", "Issue3457FN");
+
+        assertNoBugType("SING_SINGLETON_IMPLEMENTS_CLONEABLE");
+        assertNoBugType("SING_SINGLETON_INDIRECTLY_IMPLEMENTS_CLONEABLE");
+        assertNoBugType("SING_SINGLETON_IMPLEMENTS_CLONE_METHOD");
+        assertNoBugType("SING_SINGLETON_IMPLEMENTS_SERIALIZABLE");
+        assertNoBugType("SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR");
+    }
+
+    @Test
+    void Issue3457TP() {
+        performAnalysis("singletons/Issue3457TP.class");
+        assertBugTypeCount("SING_SINGLETON_GETTER_NOT_SYNCHRONIZED", 1);
+        assertBugInClass("SING_SINGLETON_GETTER_NOT_SYNCHRONIZED", "Issue3457TP");
+
+        assertNoBugType("SING_SINGLETON_IMPLEMENTS_CLONEABLE");
+        assertNoBugType("SING_SINGLETON_INDIRECTLY_IMPLEMENTS_CLONEABLE");
+        assertNoBugType("SING_SINGLETON_IMPLEMENTS_CLONE_METHOD");
+        assertNoBugType("SING_SINGLETON_IMPLEMENTS_SERIALIZABLE");
+        assertNoBugType("SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR");
+    }
+
     private void assertNoBugs() {
         assertNoBugType("SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR");
         assertNoBugType("SING_SINGLETON_IMPLEMENTS_CLONEABLE");
