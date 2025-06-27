@@ -23,9 +23,9 @@ import edu.umd.cs.findbugs.OpcodeStack;
 import edu.umd.cs.findbugs.ba.CFGBuilderException;
 import edu.umd.cs.findbugs.ba.DataflowAnalysisException;
 import edu.umd.cs.findbugs.ba.PruneUnconditionalExceptionThrowerEdges;
-import edu.umd.cs.findbugs.ba.SignatureParser;
 import edu.umd.cs.findbugs.ba.XField;
 import edu.umd.cs.findbugs.ba.XMethod;
+import edu.umd.cs.findbugs.ba.generic.GenericSignatureParser;
 import edu.umd.cs.findbugs.ba.npe.IsNullValue;
 import edu.umd.cs.findbugs.ba.npe.IsNullValueDataflow;
 import edu.umd.cs.findbugs.ba.npe.IsNullValueFrame;
@@ -184,7 +184,7 @@ public class MultipleInstantiationsOfSingletons extends OpcodeStackDetector {
                 instanceGetterMethods.put(field, method);
             } else {
                 XMethod calledMethod = item.getReturnValueOf();
-                SignatureParser parser = new SignatureParser(getMethodSig());
+                GenericSignatureParser parser = new GenericSignatureParser(getMethodSig());
                 String calledMethodReturnType = ClassName.fromFieldSignature(parser.getReturnTypeSignature());
 
                 if (calledMethod != null && !method.isPrivate() && method.isStatic()
