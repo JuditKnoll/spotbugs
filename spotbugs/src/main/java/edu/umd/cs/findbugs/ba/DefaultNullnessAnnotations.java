@@ -428,6 +428,76 @@ public class DefaultNullnessAnnotations {
         database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
                 "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;",
                 true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;C)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;I)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;J)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;CC)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;CI)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;CJ)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;CLjava/lang/Object;)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;IC)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;II)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;IJ)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;JC)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;JI)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;JJ)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;JLjava/lang/Object;)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;C)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;I)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;J)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
+        database.addMethodAnnotation("com.google.common.base.Preconditions", "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                true, NullnessAnnotation.NONNULL);
 
         database.addMethodParameterAnnotation("java.util.Objects", "requireNonNull", "(Ljava/lang/Object;)Ljava/lang/Object;",
                 true, 0, NullnessAnnotation.NONNULL);
