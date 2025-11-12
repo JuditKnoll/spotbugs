@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.annotation.CheckForNull;
 
+import edu.umd.cs.findbugs.bytecode.MemberUtils;
 import org.apache.bcel.Const;
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.ConstantClass;
@@ -61,7 +62,6 @@ import edu.umd.cs.findbugs.ba.vna.ValueNumber;
 import edu.umd.cs.findbugs.ba.vna.ValueNumberDataflow;
 import edu.umd.cs.findbugs.ba.vna.ValueNumberFrame;
 import edu.umd.cs.findbugs.ba.vna.ValueNumberSourceInfo;
-import edu.umd.cs.findbugs.bcel.BCELUtil;
 import edu.umd.cs.findbugs.util.ClassName;
 import edu.umd.cs.findbugs.util.Values;
 import edu.umd.cs.findbugs.visitclass.Util;
@@ -70,35 +70,21 @@ public class FindBadCast2 implements Detector {
 
     private final BugReporter bugReporter;
 
-    private final Set<String> concreteCollectionClasses = new HashSet<>();
+    private final Set<String> concreteCollectionClasses = Set.of("java.util.LinkedHashMap", "java.util.LinkedHashSet",
+            "java.util.HashMap", "java.util.HashSet",
+            "java.util.TreeMap", "java.util.TreeSet",
+            "java.util.ArrayList", "java.util.LinkedList",
+            "java.util.Hashtable", "java.util.Vector");
 
-    private final Set<String> abstractCollectionClasses = new HashSet<>();
+    private final Set<String> abstractCollectionClasses = Set.of("java.util.Collection", "java.util.List", "java.util.Set", "java.util.Map",
+            "java.util.SortedSet", "java.util.SortedMap");
 
-    private final Set<String> veryAbstractCollectionClasses = new HashSet<>();
+    private final Set<String> veryAbstractCollectionClasses = Set.of("java.util.Collection", "java.util.Iterable");
 
     private static final boolean DEBUG = SystemProperties.getBoolean("bc.debug");
 
     public FindBadCast2(BugReporter bugReporter) {
         this.bugReporter = bugReporter;
-        veryAbstractCollectionClasses.add("java.util.Collection");
-        veryAbstractCollectionClasses.add("java.util.Iterable");
-        abstractCollectionClasses.add("java.util.Collection");
-        abstractCollectionClasses.add("java.util.List");
-        abstractCollectionClasses.add("java.util.Set");
-        abstractCollectionClasses.add("java.util.SortedSet");
-        abstractCollectionClasses.add("java.util.SortedMap");
-        abstractCollectionClasses.add("java.util.Map");
-        concreteCollectionClasses.add("java.util.LinkedHashMap");
-        concreteCollectionClasses.add("java.util.LinkedHashSet");
-        concreteCollectionClasses.add("java.util.HashMap");
-        concreteCollectionClasses.add("java.util.HashSet");
-        concreteCollectionClasses.add("java.util.TreeMap");
-        concreteCollectionClasses.add("java.util.TreeSet");
-        concreteCollectionClasses.add("java.util.ArrayList");
-        concreteCollectionClasses.add("java.util.LinkedList");
-        concreteCollectionClasses.add("java.util.Hashtable");
-        concreteCollectionClasses.add("java.util.Vector");
-
     }
 
     @Override
@@ -141,7 +127,7 @@ public class FindBadCast2 implements Detector {
     }
 
     private void analyzeMethod(ClassContext classContext, Method method) throws CFGBuilderException, DataflowAnalysisException {
-        if (BCELUtil.isSynthetic(method) || !prescreen(classContext, method)) {
+        if (!MemberUtils.isUserGenerated(method) || !prescreen(classContext, method)) {
             return;
         }
         BugAccumulator accumulator = new BugAccumulator(bugReporter);
@@ -164,31 +150,6 @@ public class FindBadCast2 implements Detector {
             System.out.println("Checking " + methodName);
         }
 
-        Set<SourceLineAnnotation> haveInstanceOf = new HashSet<>();
-        Set<SourceLineAnnotation> haveCast = new HashSet<>();
-        for (Iterator<Location> i = cfg.locationIterator(); i.hasNext();) {
-            Location location = i.next();
-            InstructionHandle handle = location.getHandle();
-            Instruction ins = handle.getInstruction();
-
-            if (!(ins instanceof CHECKCAST) && !(ins instanceof INSTANCEOF)) {
-                continue;
-            }
-
-            SourceLineAnnotation sourceLineAnnotation = SourceLineAnnotation.fromVisitedInstruction(classContext, methodGen,
-                    sourceFile, handle);
-            if (DEBUG) {
-                if (ins instanceof CHECKCAST) {
-                    if (!haveCast.add(sourceLineAnnotation)) {
-                        System.out.println("Have multiple casts for " + sourceLineAnnotation);
-                    }
-                } else {
-                    if (!haveInstanceOf.add(sourceLineAnnotation)) {
-                        System.out.println("Have multiple instanceof for " + sourceLineAnnotation);
-                    }
-                }
-            }
-        }
         BitSet linesMentionedMultipleTimes = classContext.linesMentionedMultipleTimes(method);
         LineNumberTable lineNumberTable = methodGen.getLineNumberTable(methodGen.getConstantPool());
         Map<BugAnnotation, String> instanceOfChecks = new HashMap<>();
@@ -214,7 +175,7 @@ public class FindBadCast2 implements Detector {
                 switchHandler.enterSwitch(ins.getOpcode(),
                         pc,
                         indices,
-                        0, // Not sure how to get the default offset from BCEL but it doesn't matter here
+                        0, // Not sure how to get the default offset from BCEL, but it doesn't matter here
                         false); // It shouldn't matter here if the switch was exhaustive or not
             }
 
@@ -231,7 +192,7 @@ public class FindBadCast2 implements Detector {
                 if (m != null) {
                     String sourceSignature = m.getSourceSignature();
                     methodInvocationWasGeneric = sourceSignature != null
-                            && (sourceSignature.startsWith("<") || sourceSignature.indexOf("java/lang/Class") >= 0);
+                            && (sourceSignature.startsWith("<") || sourceSignature.contains("java/lang/Class"));
 
                     if (sourceSignature != null) {
                         GenericSignatureParser signatureParser = new GenericSignatureParser(sourceSignature);
@@ -286,8 +247,7 @@ public class FindBadCast2 implements Detector {
             }
 
             if (split && !isCast) {
-                // don't report this case; it might be infeasible due to
-                // inlining
+                // don't report this case; it might be infeasible due to inlining
                 continue;
             }
 
@@ -312,8 +272,7 @@ public class FindBadCast2 implements Detector {
             String castSig = castType.getSignature();
 
             if (operandType.equals(NullType.instance()) || operandNullness.isDefinitelyNull()) {
-                SourceLineAnnotation sourceLineAnnotation = SourceLineAnnotation.fromVisitedInstruction(classContext, methodGen,
-                        sourceFile, handle);
+                SourceLineAnnotation sourceLineAnnotation = SourceLineAnnotation.fromVisitedInstruction(classContext, methodGen, sourceFile, handle);
                 assert castSig.length() > 1;
                 if (!isCast) {
                     accumulator.accumulateBug(new BugInstance(this, "NP_NULL_INSTANCEOF", split ? LOW_PRIORITY : NORMAL_PRIORITY)
@@ -335,8 +294,6 @@ public class FindBadCast2 implements Detector {
 
             final boolean typesAreEqual = refType.equals(castType);
             if (isCast && typesAreEqual) {
-                // System.out.println("self-cast to " +
-                // castType.getSignature());
                 continue;
             }
 
@@ -383,12 +340,6 @@ public class FindBadCast2 implements Detector {
             if (!operandTypeIsExact && "Ljava/lang/Object;".equals(refSig2)) {
                 continue;
             }
-            /*
-            if (false && isCast && haveMultipleCast.contains(sourceLineAnnotation) || !isCast
-                    && haveMultipleInstanceOf.contains(sourceLineAnnotation)) {
-                // skip; might be due to JSR inlining
-                continue;
-            }*/
             String castName = ClassName.toDottedClassName(castSig2.substring(1, castSig2.length() - 1));
             String refName = ClassName.toDottedClassName(refSig2.substring(1, refSig2.length() - 1));
 
@@ -400,8 +351,7 @@ public class FindBadCast2 implements Detector {
                 paramValueNumberSet = getParameterValueNumbers(classContext, method, cfg);
             }
             ValueNumber valueNumber = vFrame.getTopValue();
-            BugAnnotation valueSource = ValueNumberSourceInfo.findAnnotationFromValueNumber(method, location, valueNumber, vFrame,
-                    "VALUE_OF");
+            BugAnnotation valueSource = ValueNumberSourceInfo.findAnnotationFromValueNumber(method, location, valueNumber, vFrame, "VALUE_OF");
             // XXX call below causes 86% of all OpcodeStackDetector.EarlyExitException (getPC() == targetPC) thrown (13000 on java* JDK7 classes)
             BugAnnotation source = BugInstance.getSourceForTopStackValue(classContext, method, location);
             boolean isParameter = paramValueNumberSet.contains(valueNumber) && source instanceof LocalVariableAnnotation;
@@ -425,15 +375,12 @@ public class FindBadCast2 implements Detector {
                         continue;
                     }
                     double rank = 0.0;
-                    boolean castToConcreteCollection = concreteCollectionClasses.contains(castName)
-                            && abstractCollectionClasses.contains(refName);
+                    boolean castToConcreteCollection = concreteCollectionClasses.contains(castName) && abstractCollectionClasses.contains(refName);
                     boolean castToAbstractCollection = abstractCollectionClasses.contains(castName)
                             && veryAbstractCollectionClasses.contains(refName);
                     int position = location.getHandle().getPosition();
                     int catchSize = Util.getSizeOfSurroundingTryBlock(classContext.getJavaClass().getConstantPool(), method.getCode(),
                             "java/lang/ClassCastException", position);
-
-
 
                     if (!operandTypeIsExact) {
                         rank = Analyze.deepInstanceOf(refJavaClass, castJavaClass);
@@ -443,13 +390,8 @@ public class FindBadCast2 implements Detector {
                             rank = (rank + 0.3) / 2;
                         }
                     }
-                    /*
-                    if (false) {
-                        System.out.println("Rank:\t" + rank + "\t" + refName + "\t" + castName);
-                    }
-                     */
-                    boolean completeInformation = (!castJavaClass.isInterface() && !refJavaClass.isInterface())
-                            || refJavaClass.isFinal() || castJavaClass.isFinal();
+                    boolean completeInformation = (!castJavaClass.isInterface() && !refJavaClass.isInterface()) || refJavaClass.isFinal()
+                            || castJavaClass.isFinal();
                     if (DEBUG) {
                         System.out.println(" In " + classContext.getFullyQualifiedMethodName(method));
                         System.out.println("At pc: " + handle.getPosition());
@@ -533,8 +475,6 @@ public class FindBadCast2 implements Detector {
                             priority--;
                         }
 
-
-
                         if (DEBUG) {
                             System.out.println(" priority a: " + priority);
                         }
@@ -562,8 +502,6 @@ public class FindBadCast2 implements Detector {
                         }
                         if (DEBUG) {
                             System.out.println(" priority e: " + priority);
-                        }
-                        if (DEBUG) {
                             System.out.println(" ref name: " + refName);
                         }
                         if ("compareTo".equals(methodGen.getName())) {
@@ -594,9 +532,6 @@ public class FindBadCast2 implements Detector {
                         }
                         if (DEBUG) {
                             System.out.println(" priority g: " + priority);
-                        }
-
-                        if (DEBUG) {
                             System.out.println(" priority h: " + priority);
                         }
 
@@ -609,7 +544,6 @@ public class FindBadCast2 implements Detector {
                         if (DEBUG) {
                             System.out.println(" priority i: " + priority);
                         }
-
 
                         if (priority < HIGH_PRIORITY) {
                             priority = HIGH_PRIORITY;
