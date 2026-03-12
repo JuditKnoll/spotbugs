@@ -25,6 +25,9 @@ import java.lang.management.ManagementFactory;
  * @author pugh
  */
 public class StartTime {
+    private StartTime() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * The start time this FindBugs instance was started

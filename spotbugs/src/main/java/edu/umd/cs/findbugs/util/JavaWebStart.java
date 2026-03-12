@@ -32,6 +32,9 @@ import javax.swing.JOptionPane;
  * @author pugh
  */
 public class JavaWebStart {
+    private JavaWebStart() {
+        /* This utility class should not be instantiated */
+    }
 
     static final @CheckForNull Method jnlpShowDocumentMethod;
 

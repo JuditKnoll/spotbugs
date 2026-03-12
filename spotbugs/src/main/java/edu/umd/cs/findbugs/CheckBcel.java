@@ -49,6 +49,10 @@ public class CheckBcel {
 
     private static final String ORG_APACHE_BCEL_GENERIC_OBJECT_TYPE = "org.apache.bcel.generic.ObjectType";
 
+    private CheckBcel() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Check whether given Class is declared final
      *

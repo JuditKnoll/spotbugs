@@ -32,6 +32,9 @@ import edu.umd.cs.findbugs.internalAnnotations.DottedClassName;
  * @author pugh
  */
 public class ObjectTypeFactory {
+    private ObjectTypeFactory() {
+        /* This utility class should not be instantiated */
+    }
 
     private static ThreadLocal<Map<String, ObjectType>> instance = new ThreadLocal<Map<String, ObjectType>>() {
         @Override

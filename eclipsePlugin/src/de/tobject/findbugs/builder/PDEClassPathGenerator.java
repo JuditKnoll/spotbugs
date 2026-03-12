@@ -53,6 +53,10 @@ import de.tobject.findbugs.FindbugsPlugin;
  */
 public class PDEClassPathGenerator {
 
+    private PDEClassPathGenerator() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * @param javaProject non null
      * @return never null (may be empty array)

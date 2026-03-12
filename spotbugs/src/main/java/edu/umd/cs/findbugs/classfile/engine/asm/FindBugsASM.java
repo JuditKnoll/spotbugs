@@ -25,6 +25,9 @@ import org.objectweb.asm.Opcodes;
  * @author pugh
  */
 public class FindBugsASM {
+    private FindBugsASM() {
+        /* This utility class should not be instantiated */
+    }
 
     private static final boolean USE_EXPERIMENTAL = Boolean.parseBoolean(System.getProperty("spotbugs.experimental", "true"));
 

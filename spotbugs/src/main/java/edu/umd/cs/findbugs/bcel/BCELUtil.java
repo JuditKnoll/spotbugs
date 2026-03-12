@@ -40,6 +40,10 @@ import edu.umd.cs.findbugs.util.ClassName;
  * @author David Hovemeyer
  */
 public abstract class BCELUtil {
+    private BCELUtil() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Construct a MethodDescriptor from JavaClass and method.
      *

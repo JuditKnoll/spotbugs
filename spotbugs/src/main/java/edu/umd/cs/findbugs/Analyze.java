@@ -18,6 +18,10 @@ import edu.umd.cs.findbugs.internalAnnotations.DottedClassName;
 import edu.umd.cs.findbugs.util.Values;
 
 public class Analyze {
+    private Analyze() {
+        /* This utility class should not be instantiated */
+    }
+
     private static JavaClass serializable;
 
     private static JavaClass collection;

@@ -27,6 +27,9 @@ import edu.umd.cs.findbugs.classfile.DescriptorFactory;
  * @author pwilliam
  */
 public class TestCaseDetector {
+    private TestCaseDetector() {
+        /* This utility class should not be instantiated */
+    }
 
     private static final ClassDescriptor JUNIT5TEST = DescriptorFactory.createClassDescriptor("org/junit/jupiter/api/Test");
 

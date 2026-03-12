@@ -40,6 +40,9 @@ import edu.umd.cs.findbugs.classfile.DescriptorFactory;
  */
 @Deprecated
 public abstract class FindBugsDefaultAnnotations {
+    private FindBugsDefaultAnnotations() {
+        /* This utility class should not be instantiated */
+    }
 
     /** Default annotation for all element types. */
     public static final ClassDescriptor DEFAULT_ANNOTATION = DescriptorFactory.instance().getClassDescriptor(

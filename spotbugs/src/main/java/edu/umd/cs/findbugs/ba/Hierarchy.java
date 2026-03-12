@@ -82,6 +82,10 @@ public class Hierarchy {
      */
     public static final ObjectType RUNTIME_EXCEPTION_TYPE = ObjectTypeFactory.getInstance("java.lang.RuntimeException");
 
+    private Hierarchy() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Determine whether one class (or reference type) is a subtype of another.
      *

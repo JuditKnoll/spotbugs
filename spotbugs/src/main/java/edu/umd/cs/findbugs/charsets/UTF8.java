@@ -41,6 +41,9 @@ import javax.annotation.WillCloseWhenClosed;
  * @author pugh
  */
 public class UTF8 {
+    private UTF8() {
+        /* This utility class should not be instantiated */
+    }
 
     public static PrintStream printStream(OutputStream out) {
         return printStream(out, false);

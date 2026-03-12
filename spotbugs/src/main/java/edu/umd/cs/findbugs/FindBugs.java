@@ -51,6 +51,9 @@ import static java.util.logging.Level.*;
  * @author David Hovemeyer
  */
 public abstract class FindBugs {
+    private FindBugs() {
+        /* This utility class should not be instantiated */
+    }
 
     /** Date of release of Java 1.0 */
     public static final long MINIMUM_TIMESTAMP = new GregorianCalendar(1996, 0, 23).getTime().getTime();

@@ -66,6 +66,10 @@ public class Hierarchy2 {
 
     private static final ClassDescriptor objectDescriptor = DescriptorFactory.createClassDescriptor(java.lang.Object.class);
 
+    private Hierarchy2() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Look up the method referenced by given InvokeInstruction. This method
      * does <em>not</em> look for implementations in super or subclasses

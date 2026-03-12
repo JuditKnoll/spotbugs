@@ -30,6 +30,10 @@ import java.util.Set;
  * of identifiers.
  */
 public class PublicIdentifiers {
+    private PublicIdentifiers() {
+        /* This utility class should not be instantiated */
+    }
+
     private static final Set<String> STANDARD_LIBRARY_PACKAGES = new HashSet<>();
     public static final Set<String> PUBLIC_IDENTIFIERS = new HashSet<>();
 

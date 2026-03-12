@@ -44,6 +44,10 @@ import de.tobject.findbugs.FindbugsPlugin;
  * @author David Hovemeyer
  */
 public abstract class IO {
+    private IO() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Write the contents of a file in the Eclipse workspace.
      *

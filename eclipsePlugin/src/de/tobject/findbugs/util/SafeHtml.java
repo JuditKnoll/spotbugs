@@ -5,6 +5,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SafeHtml {
+    private SafeHtml() {
+        /* This utility class should not be instantiated */
+    }
+
     private static final Map<String, String> CHARS_TO_ESCAPE = Stream.of(new Object[][] {
         { ">", "&gt;" },
         { "<", "&lt;" },

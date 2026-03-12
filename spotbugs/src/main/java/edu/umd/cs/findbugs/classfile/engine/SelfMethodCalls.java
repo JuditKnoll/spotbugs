@@ -39,6 +39,9 @@ import edu.umd.cs.findbugs.util.MultiMap;
  * @author pugh
  */
 public class SelfMethodCalls {
+    private SelfMethodCalls() {
+        /* This utility class should not be instantiated */
+    }
 
     public static <T> MultiMap<T, T> getSelfCalls(final ClassDescriptor classDescriptor, final Map<String, T> methods) {
         final MultiMap<T, T> map = new MultiMap<>(HashSet.class);
@@ -71,11 +74,5 @@ public class SelfMethodCalls {
 
         }, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
         return map;
-    }
-
-    //    private final ClassReader classReader;
-
-    public SelfMethodCalls(ClassReader classReader) {
-        //        this.classReader = classReader;
     }
 }

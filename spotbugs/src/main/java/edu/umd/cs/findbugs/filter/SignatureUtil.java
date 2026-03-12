@@ -28,6 +28,9 @@ import java.util.regex.Pattern;
  * @author rak
  */
 public class SignatureUtil {
+    private SignatureUtil() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * @param params The parameters for this method signature, or null, for instance <code>int, long</code>

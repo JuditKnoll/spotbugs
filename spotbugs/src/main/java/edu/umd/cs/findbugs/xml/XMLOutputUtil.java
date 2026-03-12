@@ -31,6 +31,10 @@ import java.util.Iterator;
  * @author David Hovemeyer
  */
 public abstract class XMLOutputUtil {
+    private XMLOutputUtil() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Write a list of Strings to document as elements with given tag name.
      *

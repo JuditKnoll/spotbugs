@@ -26,6 +26,10 @@ import edu.umd.cs.findbugs.util.Values;
  * @author David Hovemeyer
  */
 public class DefaultNullnessAnnotations {
+    private DefaultNullnessAnnotations() {
+        /* This utility class should not be instantiated */
+    }
+
     public static final boolean ICSE10_NULLNESS_PAPER = SystemProperties.getBoolean("icse10");
 
     /**

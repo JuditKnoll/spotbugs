@@ -33,6 +33,9 @@ import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
  * @author pwilliam
  */
 public class PutfieldScanner {
+    private PutfieldScanner() {
+        /* This utility class should not be instantiated */
+    }
 
     public static Map<Integer, OpcodeStack.Item> getPutfieldsFor(JavaClass theClass, Method method, XField field) {
         Scanner scanner = new Scanner(theClass, method, field);

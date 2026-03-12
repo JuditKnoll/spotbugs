@@ -44,6 +44,9 @@ import edu.umd.cs.findbugs.ba.type.TypeFrame;
  * @author David Hovemeyer
  */
 public abstract class WarningPropertyUtil {
+    private WarningPropertyUtil() {
+        /* This utility class should not be instantiated */
+    }
 
     /** Set of instructions which operate on a receiver object. */
     private static final BitSet receiverObjectInstructionSet = new BitSet();

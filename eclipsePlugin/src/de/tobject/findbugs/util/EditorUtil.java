@@ -30,6 +30,9 @@ import org.eclipse.ui.texteditor.ITextEditor;
  * @author Andrei
  */
 public class EditorUtil {
+    private EditorUtil() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * Default line which can be used to create a marker or annotation in the

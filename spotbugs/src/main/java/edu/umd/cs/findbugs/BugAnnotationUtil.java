@@ -29,6 +29,10 @@ import edu.umd.cs.findbugs.xml.XMLOutput;
  * @author David Hovemeyer
  */
 public abstract class BugAnnotationUtil {
+    private BugAnnotationUtil() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Write a BugAnnotation as XML.
      *

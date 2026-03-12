@@ -23,6 +23,10 @@ package edu.umd.cs.findbugs.util;
  * @author pwilliam
  */
 public class EditDistance {
+    private EditDistance() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      *
      */

@@ -56,6 +56,10 @@ public class DetectorsExtensionHelper {
     /** key is the plugin id, value is the plugin library path */
     private static SortedMap<String, String> contributedDetectors;
 
+    private DetectorsExtensionHelper() {
+        /* This utility class should not be instantiated */
+    }
+
     /** key is the plugin id, value is the plugin library path */
     public static synchronized SortedMap<String, String> getContributedDetectors() {
         if (contributedDetectors != null) {

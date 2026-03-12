@@ -41,6 +41,9 @@ import edu.umd.cs.findbugs.util.Util;
  * @author Nat Ayewah
  */
 public class GenericUtilities {
+    private GenericUtilities() {
+        /* This utility class should not be instantiated */
+    }
 
     public static enum TypeCategory {
 

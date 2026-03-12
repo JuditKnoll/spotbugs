@@ -56,6 +56,9 @@ import edu.umd.cs.findbugs.charsets.UTF8;
  * @author William Pugh
  */
 public class Util {
+    private Util() {
+        /* This utility class should not be instantiated */
+    }
 
     public static Thread startDameonThread(Thread t) {
         t.setDaemon(true);
@@ -86,6 +89,10 @@ public class Util {
     static Collection<Runnable> runAtShutdown;
 
     static class ShutdownLogging {
+        private ShutdownLogging() {
+            /* This utility class should not be instantiated */
+        }
+
         public static final boolean LOGGING = SystemProperties.getBoolean("findbugs.shutdownLogging");
     }
 

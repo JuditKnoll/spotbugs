@@ -52,6 +52,10 @@ import edu.umd.cs.findbugs.classfile.UncheckedAnalysisException;
  * @author William Pugh
  */
 public class Analysis {
+    private Analysis() {
+        /* This utility class should not be instantiated */
+    }
+
     private static final boolean DEBUG = SystemProperties.getBoolean("ctq.debug.analysis");
 
     /**

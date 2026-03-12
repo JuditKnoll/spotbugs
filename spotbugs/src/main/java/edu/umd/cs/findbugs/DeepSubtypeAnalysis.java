@@ -33,6 +33,10 @@ public class DeepSubtypeAnalysis {
 
     private static final boolean DEBUG = SystemProperties.getBoolean("dsa.debug");
 
+    private DeepSubtypeAnalysis() {
+        /* This utility class should not be instantiated */
+    }
+
     static {
         try {
             serializable = AnalysisContext.lookupSystemClass("java.io.Serializable");

@@ -32,6 +32,10 @@ import org.apache.commons.text.StringEscapeUtils;
  * @author Brian Cole
  */
 public class Strings {
+    private Strings() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Trim trailing comma from given string.
      *

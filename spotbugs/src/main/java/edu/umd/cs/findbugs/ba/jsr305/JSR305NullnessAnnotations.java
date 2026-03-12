@@ -28,6 +28,9 @@ import edu.umd.cs.findbugs.classfile.DescriptorFactory;
  * @author David Hovemeyer
  */
 public abstract class JSR305NullnessAnnotations {
+    private JSR305NullnessAnnotations() {
+        /* This utility class should not be instantiated */
+    }
 
     public static final ClassDescriptor CHECK_FOR_NULL = DescriptorFactory
             .createClassDescriptor(javax.annotation.CheckForNull.class);

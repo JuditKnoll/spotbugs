@@ -30,6 +30,10 @@ import org.apache.bcel.classfile.LocalVariableTable;
  * Eases access to a BCEL LocalVariable object
  */
 public class LVTHelper {
+    private LVTHelper() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * returns the local variable at an index int the scope of PC
      *

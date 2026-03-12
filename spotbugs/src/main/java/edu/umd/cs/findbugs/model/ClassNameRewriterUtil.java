@@ -32,6 +32,9 @@ import edu.umd.cs.findbugs.util.ClassName;
  * @author David Hovemeyer
  */
 public abstract class ClassNameRewriterUtil {
+    private ClassNameRewriterUtil() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * Rewrite a method signature.

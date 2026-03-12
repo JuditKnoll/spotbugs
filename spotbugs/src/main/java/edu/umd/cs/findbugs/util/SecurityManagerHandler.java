@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
  * property.
  */
 public class SecurityManagerHandler {
+    private SecurityManagerHandler() {
+        /* This utility class should not be instantiated */
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecurityManagerHandler.class);
 

@@ -40,6 +40,10 @@ import edu.umd.cs.findbugs.classfile.analysis.EnumValue;
  * @author William Pugh
  */
 public class TypeQualifierResolver {
+    private TypeQualifierResolver() {
+        /* This utility class should not be instantiated */
+    }
+
     static final ClassDescriptor typeQualifier = DescriptorFactory.createClassDescriptor(javax.annotation.meta.TypeQualifier.class);
 
     static final ClassDescriptor typeQualifierNickname = DescriptorFactory

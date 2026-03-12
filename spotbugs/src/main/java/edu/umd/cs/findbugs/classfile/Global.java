@@ -26,6 +26,10 @@ package edu.umd.cs.findbugs.classfile;
  * @author David Hovemeyer
  */
 public abstract class Global {
+    private Global() {
+        /* This utility class should not be instantiated */
+    }
+
     private static final InheritableThreadLocal<IAnalysisCache> analysisCacheThreadLocal = new InheritableThreadLocal<>();
 
     /**

@@ -43,6 +43,10 @@ import edu.umd.cs.findbugs.util.ClassName;
  * @author pugh
  */
 public class Util {
+    private Util() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Determine the outer class of obj.
      *

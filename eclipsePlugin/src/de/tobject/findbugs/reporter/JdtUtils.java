@@ -46,6 +46,9 @@ import de.tobject.findbugs.FindbugsPlugin;
  * @author Andrei
  */
 public class JdtUtils {
+    private JdtUtils() {
+        /* This utility class should not be instantiated */
+    }
 
     static class AnonymClassComparator implements Comparator<IType> {
 

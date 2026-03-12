@@ -38,6 +38,9 @@ import javax.annotation.WillCloseWhenClosed;
  * @author pugh
  */
 public class UserTextFile {
+    private UserTextFile() {
+        /* This utility class should not be instantiated */
+    }
 
     public static Writer fileWriter(String fileName) throws IOException {
         return new OutputStreamWriter(Files.newOutputStream(Path.of(fileName)), Charset.defaultCharset());

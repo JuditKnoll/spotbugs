@@ -37,6 +37,9 @@ import edu.umd.cs.findbugs.internalAnnotations.DottedClassName;
 import edu.umd.cs.findbugs.internalAnnotations.SlashedClassName;
 
 public class Lookup {
+    private Lookup() {
+        /* This utility class should not be instantiated */
+    }
 
     /*
     private static Subtypes2 subtypes2() {

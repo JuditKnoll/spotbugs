@@ -42,6 +42,10 @@ public interface AnalysisFeatures {
 
 
     public static class Builder {
+        private Builder() {
+            /* This utility class should not be instantiated */
+        }
+
         static int next = NUM_BOOLEAN_ANALYSIS_PROPERTIES;
 
         private static @AnalysisFeature int asFeatureNum(int num) {

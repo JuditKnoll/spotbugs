@@ -30,6 +30,9 @@ import edu.umd.cs.findbugs.internalAnnotations.StaticConstant;
  * @author David Hovemeyer
  */
 public class Archive {
+    private Archive() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * File extensions that indicate an archive (zip, jar, or similar).

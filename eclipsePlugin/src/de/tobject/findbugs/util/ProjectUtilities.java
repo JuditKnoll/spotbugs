@@ -41,6 +41,9 @@ import de.tobject.findbugs.FindbugsPlugin;
  * @since 25.07.2003
  */
 public class ProjectUtilities {
+    private ProjectUtilities() {
+        /* This utility class should not be instantiated */
+    }
 
     private static boolean DEBUG;
 

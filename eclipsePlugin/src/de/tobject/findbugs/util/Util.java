@@ -47,6 +47,9 @@ import edu.umd.cs.findbugs.util.Archive;
  * @author Andrei Loskutov
  */
 public class Util {
+    private Util() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * Checks whether the given resource is a Java source file.

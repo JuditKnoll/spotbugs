@@ -17,6 +17,9 @@ import org.apache.bcel.classfile.Method;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 
 public class MutableClasses {
+    private MutableClasses() {
+        /* This utility class should not be instantiated */
+    }
 
     private static final Set<String> KNOWN_IMMUTABLE_CLASSES = Set.of(
             "java.lang.String", "java.lang.Integer", "java.lang.Byte", "java.lang.Character",

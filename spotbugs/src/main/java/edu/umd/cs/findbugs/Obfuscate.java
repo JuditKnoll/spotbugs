@@ -31,6 +31,9 @@ import edu.umd.cs.findbugs.internalAnnotations.DottedClassName;
  * @author pugh
  */
 public class Obfuscate {
+    private Obfuscate() {
+        /* This utility class should not be instantiated */
+    }
 
     static final String HASH_SEED = SystemProperties.getProperty("hashSeed", "");
 

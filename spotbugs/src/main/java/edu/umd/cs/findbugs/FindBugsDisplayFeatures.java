@@ -23,6 +23,9 @@ package edu.umd.cs.findbugs;
  * @author pugh
  */
 public class FindBugsDisplayFeatures {
+    private FindBugsDisplayFeatures() {
+        /* This utility class should not be instantiated */
+    }
 
     private static boolean abridgedMessages;
 

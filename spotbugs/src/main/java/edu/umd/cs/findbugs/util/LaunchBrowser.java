@@ -35,6 +35,9 @@ import edu.umd.cs.findbugs.SystemProperties;
  *
  */
 public class LaunchBrowser {
+    private LaunchBrowser() {
+        /* This utility class should not be instantiated */
+    }
 
     private static Pattern validExec = Pattern.compile("[a-zA-Z0-9-_/]+");
 

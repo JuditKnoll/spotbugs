@@ -34,6 +34,9 @@ import javax.annotation.meta.When;
  * @author David Hovemeyer
  */
 public abstract class ClassName {
+    private ClassName() {
+        /* This utility class should not be instantiated */
+    }
 
     public static boolean isMathClass(@SlashedClassName String className) {
         return "java/lang/Math".equals(className) || "java/lang/StrictMath".equals(className);

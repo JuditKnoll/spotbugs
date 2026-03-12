@@ -67,6 +67,10 @@ public class NullnessAnnotation extends AnnotationEnumeration<NullnessAnnotation
     private static final NullnessAnnotation[] myValues = { UNKNOWN_NULLNESS, NONNULL, NULLABLE, CHECK_FOR_NULL };
 
     public static class Parser {
+        private Parser() {
+            /* This utility class should not be instantiated */
+        }
+
         @CheckForNull
         public static NullnessAnnotation parse(@DottedClassName String className) {
             className = ClassName.toDottedClassName(className);

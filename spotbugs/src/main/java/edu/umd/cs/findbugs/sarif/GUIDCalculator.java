@@ -15,6 +15,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @author Jeremias Eppler
  */
 public class GUIDCalculator {
+    private GUIDCalculator() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * UUID version 5, but without using a namespace.

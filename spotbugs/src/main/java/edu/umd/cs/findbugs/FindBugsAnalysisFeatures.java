@@ -48,6 +48,10 @@ public abstract class FindBugsAnalysisFeatures {
     public static final @AnalysisFeature int INTERPROCEDURAL_ANALYSIS_OF_REFERENCED_CLASSES = AnalysisFeatures.Builder.build(
             "INTERPROCEDURAL_ANALYSIS_OF_REFERENCED_CLASSES");
 
+    private FindBugsAnalysisFeatures() {
+        /* This utility class should not be instantiated */
+    }
+
     static void setProperty(@AnalysisFeature int property, boolean value) {
         AnalysisContext.currentAnalysisContext().setBoolProperty(property, value);
     }

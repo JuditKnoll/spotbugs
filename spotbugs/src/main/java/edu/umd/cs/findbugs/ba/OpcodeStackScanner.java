@@ -32,6 +32,9 @@ import edu.umd.cs.findbugs.internalAnnotations.DottedClassName;
  * @author pwilliam
  */
 public class OpcodeStackScanner {
+    private OpcodeStackScanner() {
+        /* This utility class should not be instantiated */
+    }
 
     static final boolean DEBUG = SystemProperties.getBoolean("oss.debug");
 

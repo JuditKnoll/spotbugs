@@ -57,6 +57,9 @@ import edu.umd.cs.findbugs.ba.AnalysisContext;
  * @see "https://openjdk.java.net/jeps/181"
  */
 public class NestedAccessUtil {
+    private NestedAccessUtil() {
+        /* This utility class should not be instantiated */
+    }
 
     private static final int JAVA_11_CLASS_VERSION = Const.MAJOR_11;
 

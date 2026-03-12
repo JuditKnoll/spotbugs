@@ -38,6 +38,9 @@ import edu.umd.cs.findbugs.ba.AnalysisContext;
  * @author pugh
  */
 public class SystemProperties {
+    private SystemProperties() {
+        /* This utility class should not be instantiated */
+    }
 
     private static Properties properties = new Properties();
 

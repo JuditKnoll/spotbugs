@@ -56,6 +56,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.util.Util;
 
 public class IO {
+    private IO() {
+        /* This utility class should not be instantiated */
+    }
+
     static ThreadLocal<byte[]> myByteBuf = new ThreadLocal<byte[]>() {
         @Override
         protected byte[] initialValue() {

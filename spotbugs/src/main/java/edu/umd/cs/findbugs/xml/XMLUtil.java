@@ -32,6 +32,9 @@ import org.dom4j.io.SAXReader;
  * @author pugh
  */
 public class XMLUtil {
+    private XMLUtil() {
+        /* This utility class should not be instantiated */
+    }
 
     @SuppressWarnings("unchecked")
     public static <T> List<T> selectNodes(Node node, String arg0) {

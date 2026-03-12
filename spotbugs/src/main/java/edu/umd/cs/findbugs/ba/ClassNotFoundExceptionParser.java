@@ -55,6 +55,10 @@ public class ClassNotFoundExceptionParser {
         patternList = list.toArray(new Pattern[0]);
     }
 
+    private ClassNotFoundExceptionParser() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Get the name of the missing class from a ClassNotFoundException.
      *

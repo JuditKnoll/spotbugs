@@ -39,6 +39,9 @@ import org.apache.bcel.classfile.Method;
  * @author Ádám Balogh
  */
 public class BootstrapMethodsUtil {
+    private BootstrapMethodsUtil() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * Returns the method representation of a bootstrap method from a Java class.

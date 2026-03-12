@@ -37,6 +37,9 @@ import edu.umd.cs.findbugs.classfile.MethodDescriptor;
  * @see CFGBuilder
  */
 public class CFGBuilderFactory {
+    private CFGBuilderFactory() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * Create a CFGBuilder to build a CFG for given method.

@@ -36,6 +36,9 @@ import java.nio.file.Path;
  * @author pugh
  */
 public class SourceCharset {
+    private SourceCharset() {
+        /* This utility class should not be instantiated */
+    }
 
     public static Writer fileWriter(File fileName) throws IOException {
         return new OutputStreamWriter(Files.newOutputStream(fileName.toPath()), Charset.defaultCharset());

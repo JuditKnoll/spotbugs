@@ -44,6 +44,9 @@ import edu.umd.cs.findbugs.ba.XField;
  * @author David Hovemeyer
  */
 public abstract class ValueNumberSourceInfo {
+    private ValueNumberSourceInfo() {
+        /* This utility class should not be instantiated */
+    }
 
     /**
      * @param method

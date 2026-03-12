@@ -32,6 +32,10 @@ import jakarta.annotation.Nonnull;
  * @author David Hovemeyer
  */
 public class ClassPathUtil {
+    private ClassPathUtil() {
+        /* This utility class should not be instantiated */
+    }
+
     /**
      * Try to find a codebase with the given name in the given class path
      * string.

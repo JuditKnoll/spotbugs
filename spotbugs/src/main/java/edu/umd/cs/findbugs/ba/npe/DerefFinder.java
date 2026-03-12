@@ -63,6 +63,9 @@ import edu.umd.cs.findbugs.ba.vna.ValueNumberFrame;
  * @author pugh
  */
 public class DerefFinder {
+    private DerefFinder() {
+        /* This utility class should not be instantiated */
+    }
 
     public static final boolean DEBUG = SystemProperties.getBoolean("deref.finder.debug");
 

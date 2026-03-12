@@ -31,6 +31,9 @@ import edu.umd.cs.findbugs.log.Profiler;
  * @author pugh
  */
 public class ZipCodeBaseFactory {
+    private ZipCodeBaseFactory() {
+        /* This utility class should not be instantiated */
+    }
 
     public static AbstractScannableCodeBase makeZipCodeBase(ICodeBaseLocator codeBaseLocator, File file) throws IOException {
         Profiler profiler = Global.getAnalysisCache().getProfiler();
@@ -44,7 +47,4 @@ public class ZipCodeBaseFactory {
             profiler.end(ZipCodeBaseFactory.class);
         }
     }
-
-
-
 }
