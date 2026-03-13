@@ -1,19 +1,16 @@
 package de.tobject.findbugs.util;
 
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SafeHtml {
     private SafeHtml() {
         /* This utility class should not be instantiated */
     }
 
-    private static final Map<String, String> CHARS_TO_ESCAPE = Stream.of(new Object[][] {
-        { ">", "&gt;" },
-        { "<", "&lt;" },
-        { "&", "&amp;" }
-    }).collect(Collectors.toMap(data -> (String) data[0], data -> (String) data[1]));
+    private static final Map<String, String> CHARS_TO_ESCAPE = Map.of(
+            ">", "&gt;",
+            "<", "&lt;",
+            "&", "&amp;");
 
     public static String escape(String s) {
         for (Map.Entry<String, String> pair : CHARS_TO_ESCAPE.entrySet()) {
